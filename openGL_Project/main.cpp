@@ -34,9 +34,7 @@ GLuint sunTexture, planetTexture, moonTexture, jupiterTexture, marsTexture,
 mercuryTexture, neptuneTexture, plutoTexture, saturnTexture, uranusTexture, venusTexture;
 
 Sphere mySphere = Sphere(48);
-
 void setupVertices(void) {
-
 	glGenVertexArrays(1, vao);
 	glBindVertexArray(vao[0]);
 	glGenBuffers(numVBOs, vbo);
@@ -69,13 +67,13 @@ void setupVertices(void) {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, tvalues.size()*4, &tvalues[0], GL_STATIC_DRAW);
 
-	/*glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
-	glBufferData(GL_ARRAY_BUFFER, nvalues.size()*4, &nvalues[0], GL_STATIC_DRAW);*/
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+	glBufferData(GL_ARRAY_BUFFER, nvalues.size()*4, &nvalues[0], GL_STATIC_DRAW);
 }
 
 void init(GLFWwindow* window) {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 2.0f;
+	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 300.0f;
 	sphLocX = 0.0f; sphLocY = 0.0f; sphLocZ = -1.0f;
 
 	glfwGetFramebufferSize(window, &width, &height);
@@ -84,7 +82,7 @@ void init(GLFWwindow* window) {
 
 	setupVertices();
 
-	//sunTexture = Utils::loadTexture("mars.bmp");
+	sunTexture = Utils::loadTexture("sun.bmp");
 	planetTexture = Utils::loadTexture("earth.bmp");
 	moonTexture = Utils::loadTexture("moon.bmp");
 	jupiterTexture = Utils::loadTexture("jupiter.bmp");
@@ -122,7 +120,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.push(mvStack.top());
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(1.0, 0.0, 0.0));
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 	
 
@@ -142,13 +140,56 @@ void display(GLFWwindow* window, double currentTime) {
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
 	mvStack.pop();
 
+	//Mercury
+	mvStack.push(mvStack.top());
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.38f, 0.38f, 0.38f));
+	mvStack.push(mvStack.top());
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+	
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, sunTexture);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+	mvStack.pop();
+
+
 	//venus
+	mvStack.push(mvStack.top());
+	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(2.48f, 2.48f, 2.48f));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
+	mvStack.push(mvStack.top());
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(1.0, 0.0, 0.0));
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 
-	//mars
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, venusTexture);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+	mvStack.pop();
 
-
+	
 	//earth
 	mvStack.push(mvStack.top());
+	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(1.05f, 1.05f, 1.05f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
 	mvStack.push(mvStack.top());
 	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
@@ -170,7 +211,7 @@ void display(GLFWwindow* window, double currentTime) {
 	//moon
 	mvStack.push(mvStack.top());
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, sin((float)currentTime) * 2.0, cos((float)currentTime) * 2.0));
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 0.0, 1.0));
+	//mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 0.0, 1.0));
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.25f, 0.25f, 0.25f));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -184,6 +225,112 @@ void display(GLFWwindow* window, double currentTime) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+	mvStack.pop();
+
+	//mars
+	mvStack.push(mvStack.top());
+	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.53f, 0.53f, 0.53f));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
+	mvStack.push(mvStack.top());
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, marsTexture);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+	mvStack.pop();
+
+	//jupiter
+	mvStack.push(mvStack.top());
+	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(21.05f, 21.05f, 21.05f));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
+	mvStack.push(mvStack.top());
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, jupiterTexture);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+	mvStack.pop();
+
+	//Saturn
+	mvStack.push(mvStack.top());
+	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.84f, 0.84f, 0.84f));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
+	mvStack.push(mvStack.top());
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, saturnTexture);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+	mvStack.pop();
+
+	//Uranus
+	mvStack.push(mvStack.top());
+	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.42f, 0.421f, 0.42f));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
+	mvStack.push(mvStack.top());
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, uranusTexture);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+	mvStack.pop();
+
+	//Neptune
+	mvStack.push(mvStack.top());
+	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.42, 0.42f, 0.42f));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
+	mvStack.push(mvStack.top());
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, neptuneTexture);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+	mvStack.pop();
 
 	mvStack.pop(); mvStack.pop(); mvStack.pop();
 	mvStack.pop();
