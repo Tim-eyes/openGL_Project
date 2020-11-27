@@ -75,5 +75,8 @@
     <Image Include="Demo\venus.bmp">
       <Filter>资源文件\Demo</Filter>
     </Image>
+    <Image Include="sun.bmp">
+      <Filter>资源文件\Demo</Filter>
+    </Image>
   </ItemGroup>
 </Project>

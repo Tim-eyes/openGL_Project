@@ -178,6 +178,7 @@
     <Image Include="Demo\saturn.bmp" />
     <Image Include="Demo\uranus.bmp" />
     <Image Include="Demo\venus.bmp" />
+    <Image Include="sun.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

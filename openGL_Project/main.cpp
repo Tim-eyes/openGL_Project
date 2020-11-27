@@ -73,7 +73,7 @@ void setupVertices(void) {
 
 void init(GLFWwindow* window) {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 300.0f;
+	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 10.0f;
 	sphLocX = 0.0f; sphLocY = 0.0f; sphLocZ = -1.0f;
 
 	glfwGetFramebufferSize(window, &width, &height);
@@ -94,6 +94,31 @@ void init(GLFWwindow* window) {
 	uranusTexture = Utils::loadTexture("uranus.bmp");
 	venusTexture = Utils::loadTexture("venus.bmp");
 	
+}
+
+void push_plant(stack<glm::mat4> mvStack,double currentTime,GLuint texture){
+	mvStack.push(mvStack.top());
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	mvStack.push(mvStack.top());
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+	mvStack.pop();
 }
 
 void display(GLFWwindow* window, double currentTime) {
@@ -143,6 +168,7 @@ void display(GLFWwindow* window, double currentTime) {
 	//Mercury
 	mvStack.push(mvStack.top());
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.38f, 0.38f, 0.38f));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
 	mvStack.push(mvStack.top());
 	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
@@ -157,7 +183,7 @@ void display(GLFWwindow* window, double currentTime) {
 	glEnableVertexAttribArray(1);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, sunTexture);
+	glBindTexture(GL_TEXTURE_2D, mercuryTexture);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -187,7 +213,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.pop();
 
 	
-	//earth
+	//Earth
 	mvStack.push(mvStack.top());
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(1.05f, 1.05f, 1.05f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
@@ -208,7 +234,7 @@ void display(GLFWwindow* window, double currentTime) {
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
 	mvStack.pop();
 
-	//moon
+	//Moon
 	mvStack.push(mvStack.top());
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, sin((float)currentTime) * 2.0, cos((float)currentTime) * 2.0));
 	//mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 0.0, 1.0));
@@ -227,7 +253,7 @@ void display(GLFWwindow* window, double currentTime) {
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
 	mvStack.pop();
 
-	//mars
+	//Mars
 	mvStack.push(mvStack.top());
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.53f, 0.53f, 0.53f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
@@ -248,7 +274,7 @@ void display(GLFWwindow* window, double currentTime) {
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
 	mvStack.pop();
 
-	//jupiter
+	//Jupiter
 	mvStack.push(mvStack.top());
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(21.05f, 21.05f, 21.05f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
@@ -346,7 +372,7 @@ int main(void) {
 	if (!glfwInit()) { exit(EXIT_FAILURE); }
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	GLFWwindow* window = glfwCreateWindow(600, 600, "Project", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1000, 1000, "Project", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
 	glfwSwapInterval(1);
