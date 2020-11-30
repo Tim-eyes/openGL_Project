@@ -164,7 +164,9 @@
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="fragCubeShader.glsl" />
     <None Include="fragShader.glsl" />
+    <None Include="vertCubeShader.glsl" />
     <None Include="vertShader.glsl" />
   </ItemGroup>
   <ItemGroup>

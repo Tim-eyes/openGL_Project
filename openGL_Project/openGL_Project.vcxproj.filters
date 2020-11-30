@@ -43,6 +43,12 @@
     <None Include="vertShader.glsl">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="fragCubeShader.glsl">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="vertCubeShader.glsl">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Demo\earth.bmp">
