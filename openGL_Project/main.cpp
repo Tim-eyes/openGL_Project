@@ -11,6 +11,7 @@
 #include <glm\gtc\matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include "Sphere.h"
 #include "Utils.h"
+#include "Torus.h"
 using namespace std;
 
 #define numVAOs 1
@@ -18,6 +19,7 @@ using namespace std;
 
 float cameraX, cameraY, cameraZ;
 float sphLocX, sphLocY, sphLocZ;
+float torLocX, torLocY, torLocZ;
 GLuint renderingProgram, renderingProgramCubeMap;
 GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
@@ -34,7 +36,11 @@ GLuint sunTexture, planetTexture, moonTexture, jupiterTexture, marsTexture,
 mercuryTexture, neptuneTexture, plutoTexture, saturnTexture, uranusTexture, venusTexture,
 backgroundTexture;
 
+GLfloat LightPosition[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
 Sphere mySphere = Sphere(48);
+Torus myTorus = Torus();
+int numTorusVertices, numTorusIndices;
 void setupVertices(void) {
 	float cubeVertexPositions[108] =
 	{ -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
@@ -94,9 +100,9 @@ void init(GLFWwindow* window) {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
 	renderingProgramCubeMap = Utils::createShaderProgram("vertCubeShader.glsl", "fragCubeShader.glsl");
 
-	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 100.0f;
+	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 20.0f;
 	sphLocX = 0.0f; sphLocY = 0.0f; sphLocZ = -1.0f;
-
+	torLocX = 0.0f; torLocY = 0.0f; torLocZ = -1.0f;
 	glfwGetFramebufferSize(window, &width, &height);
 	aspect = (float)width / (float)height;
 	pMat = glm::perspective(1.0472f, aspect, 0.1f, 1000.0f);
@@ -122,28 +128,6 @@ void init(GLFWwindow* window) {
 	
 }
 
-void push_planet(stack<glm::mat4> mvStack,double currentTime,GLuint texture){
-	/*mvStack.push(mvStack.top());
-	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));*/
-	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
-
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
-	glEnableVertexAttribArray(1);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
-	mvStack.pop();
-}
-
 void display(GLFWwindow* window, double currentTime) {
 
 
@@ -159,8 +143,8 @@ void display(GLFWwindow* window, double currentTime) {
 	projLoc = glGetUniformLocation(renderingProgramCubeMap, "p_matrix");
 
 	glUniformMatrix4fv(vLoc, 1, GL_FALSE, glm::value_ptr(vMat));
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
-
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));	
+	
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[3]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
@@ -212,12 +196,12 @@ void display(GLFWwindow* window, double currentTime) {
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
 	mvStack.pop();
 
-	//Mercury 
+	//Mercury 	
 	mvStack.push(mvStack.top());
 	mvStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.38f, 0.38f, 0.38f));
-	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 8.0, 0.0, cos((float)currentTime) * 8.0));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 8.0, 0.0f, cos((float)currentTime) * 8.0));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*0.134), glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 	
 
@@ -229,9 +213,6 @@ void display(GLFWwindow* window, double currentTime) {
 	glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
-	//glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, 0);
-	//glEnableVertexAttribArray(2);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mercuryTexture);
@@ -239,7 +220,7 @@ void display(GLFWwindow* window, double currentTime) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
-	mvStack.pop();
+	mvStack.pop(); //mvStack.pop();
 
 
 	//venus
@@ -247,7 +228,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(2.48f, 2.48f, 2.48f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(1.0, 0.0, 0.0));
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*0.008), glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -267,11 +248,12 @@ void display(GLFWwindow* window, double currentTime) {
 
 	
 	//Earth
+	
 	mvStack.push(mvStack.top());
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(1.05f, 1.05f, 1.05f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*2.0), glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -290,7 +272,7 @@ void display(GLFWwindow* window, double currentTime) {
 	//Moon
 	mvStack.push(mvStack.top());
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, sin((float)currentTime) * 2.0, cos((float)currentTime) * 2.0));
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 0.0, 1.0));
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime), glm::vec3(0.0, 0.0, 1.0));
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.25f, 0.25f, 0.25f));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 
@@ -312,7 +294,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.53f, 0.53f, 0.53f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*1.9), glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -334,7 +316,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(21.05f, 21.05f, 21.05f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*5.33), glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -355,7 +337,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.84f, 0.84f, 0.84f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*4.8), glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -376,7 +358,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.42f, 0.421f, 0.42f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime * 2.82), glm::vec3(1.0, 0.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -397,7 +379,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.42, 0.42f, 0.42f));
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*3.00), glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
