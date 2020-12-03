@@ -24,7 +24,7 @@ GLuint renderingProgram, renderingProgramCubeMap;
 GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
 float rotAmt = 0.0f;
-bool keys[1024];
+bool keys[100000];
 
 //camera
 GLfloat lastFrameTime = 0.0f;
@@ -108,7 +108,7 @@ void init(GLFWwindow* window) {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
 	renderingProgramCubeMap = Utils::createShaderProgram("vertCubeShader.glsl", "fragCubeShader.glsl");
 
-	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 50.0f;
+	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 20.0f;
 	sphLocX = 0.0f; sphLocY = 0.0f; sphLocZ = -1.0f;
 	torLocX = 0.0f; torLocY = 0.0f; torLocZ = -1.0f;
 	glfwGetFramebufferSize(window, &width, &height);
@@ -136,12 +136,12 @@ void init(GLFWwindow* window) {
 	
 }
 
-void cameraMove() {
-	GLfloat curFrameTime = glfwGetTime();
-	deltaTime = curFrameTime - lastFrameTime;
-	lastFrameTime = curFrameTime;
+void cameraMove(double currentTime) {
+	//GLfloat curFrameTime = glfwGetTime();
+	deltaTime = currentTime - lastFrameTime;
+	lastFrameTime = currentTime;
 	GLfloat cameraSpeed = 5.0f * deltaTime;
-	//根据按下的按键来更新摄像机的值
+	//
 	if (keys[GLFW_KEY_W])
 		cameraPos += cameraSpeed * cameraFront;
 	if (keys[GLFW_KEY_S])
@@ -158,9 +158,10 @@ void display(GLFWwindow* window, double currentTime) {
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
-	
-	vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
-	//cameraMove();
+	cameraMove(currentTime);
+
+	vMat = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
 	//draw cube
 	glUseProgram(renderingProgramCubeMap);
 	vLoc = glGetUniformLocation(renderingProgramCubeMap, "v_matrix");
@@ -256,7 +257,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 8.0, -2.0f, cos((float)currentTime) * 8.0));
 	mvStack.push(mvStack.top());
 	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*0.008), glm::vec3(0.0, 1.0, 0.0));
-	//mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*1.0), glm::vec3(0.0, 1.0, 0.0));*/
+	//mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*1.0), glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -434,9 +435,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
-	if (key >= 0 && key < 1024)
+	if (key >= 0 && key < 100000)
 	{
-		//设置按下/释放键为true或false
+		//true & false
 		if (action == GLFW_PRESS)
 			keys[key] = true;
 		else if (action == GLFW_RELEASE)
@@ -471,7 +472,7 @@ int main(int argc,char **argv) {
 		display(window, glfwGetTime());
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-		//cameraMove();
+
 	}
 
 	glfwDestroyWindow(window);
