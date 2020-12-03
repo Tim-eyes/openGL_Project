@@ -24,6 +24,14 @@ GLuint renderingProgram, renderingProgramCubeMap;
 GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
 float rotAmt = 0.0f;
+bool keys[1024];
+
+//camera
+GLfloat lastFrameTime = 0.0f;
+GLfloat deltaTime = 0.0f;
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraPos = glm::vec3(cameraX, cameraY, cameraZ);
 
 // variable allocation for display
 GLuint vLoc, mvLoc, projLoc;
@@ -57,7 +65,7 @@ void setupVertices(void) {
 		1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f
 	};
 
-	glGenVertexArrays(1, vao);
+	glGenVertexArrays(numVAOs, vao);
 	glBindVertexArray(vao[0]);
 	glGenBuffers(numVBOs, vbo);
 
@@ -100,7 +108,7 @@ void init(GLFWwindow* window) {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
 	renderingProgramCubeMap = Utils::createShaderProgram("vertCubeShader.glsl", "fragCubeShader.glsl");
 
-	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 100.0f;
+	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 50.0f;
 	sphLocX = 0.0f; sphLocY = 0.0f; sphLocZ = -1.0f;
 	torLocX = 0.0f; torLocY = 0.0f; torLocZ = -1.0f;
 	glfwGetFramebufferSize(window, &width, &height);
@@ -128,15 +136,31 @@ void init(GLFWwindow* window) {
 	
 }
 
+void cameraMove() {
+	GLfloat curFrameTime = glfwGetTime();
+	deltaTime = curFrameTime - lastFrameTime;
+	lastFrameTime = curFrameTime;
+	GLfloat cameraSpeed = 5.0f * deltaTime;
+	//根据按下的按键来更新摄像机的值
+	if (keys[GLFW_KEY_W])
+		cameraPos += cameraSpeed * cameraFront;
+	if (keys[GLFW_KEY_S])
+		cameraPos -= cameraSpeed * cameraFront;
+	if (keys[GLFW_KEY_A])
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	if (keys[GLFW_KEY_D])
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+}
+
 void display(GLFWwindow* window, double currentTime) {
 
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
-
-	vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
 	
+	vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
+	//cameraMove();
 	//draw cube
 	glUseProgram(renderingProgramCubeMap);
 	vLoc = glGetUniformLocation(renderingProgramCubeMap, "v_matrix");
@@ -229,7 +253,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.push(mvStack.top());
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(2.48f, 2.48f, 2.48f));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, -2.0f, cos((float)currentTime) * 4.0));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 8.0, -2.0f, cos((float)currentTime) * 8.0));
 	mvStack.push(mvStack.top());
 	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*0.008), glm::vec3(0.0, 1.0, 0.0));
 	//mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*1.0), glm::vec3(0.0, 1.0, 0.0));*/
@@ -254,7 +278,7 @@ void display(GLFWwindow* window, double currentTime) {
 	//Earth
 	mvStack.push(mvStack.top());
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(1.05f, 1.05f, 1.05f));
-	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 8.0, 0.0f, cos((float)currentTime) * 8.0));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 12.0, 0.0f, cos((float)currentTime) * 12.0));
 	mvStack.push(mvStack.top());
 	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*2.0), glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
@@ -296,7 +320,7 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.push(mvStack.top());
 	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.53f, 0.53f, 0.53f));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 4.0, 0.0f, cos((float)currentTime) * 4.0));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 8.0, 0.0f, cos((float)currentTime) * 8.0));
 	mvStack.push(mvStack.top());
 	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime*1.9), glm::vec3(0.0, 1.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
@@ -312,7 +336,7 @@ void display(GLFWwindow* window, double currentTime) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
-	mvStack.pop(); mvStack.pop();
+	mvStack.pop(); mvStack.pop(); 
 
 
 	//Jupiter
@@ -361,9 +385,9 @@ void display(GLFWwindow* window, double currentTime) {
 
 	//Uranus
 	mvStack.push(mvStack.top());
-	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.42f, 0.421f, 0.42f));
+	mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.42f, 0.42f, 0.42f));
 	mvStack.push(mvStack.top());
-	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 16.0, 0.0f, cos((float)currentTime) * 16.0));
+	mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 16.0, -4.0f, cos((float)currentTime) * 16.0));
 	mvStack.push(mvStack.top());
 	mvStack.top() *= rotate(glm::mat4(1.0f), (float)(currentTime * 2.82), glm::vec3(1.0, 0.0, 0.0));
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
@@ -406,6 +430,21 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.pop();
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+	if (key >= 0 && key < 1024)
+	{
+		//设置按下/释放键为true或false
+		if (action == GLFW_PRESS)
+			keys[key] = true;
+		else if (action == GLFW_RELEASE)
+			keys[key] = false;
+	}
+
+}
+
 void window_size_callback(GLFWwindow* win, int newWidth, int newHeight) {
 	aspect = (float)newWidth / (float)newHeight;
 	glViewport(0, 0, newWidth, newHeight);
@@ -423,13 +462,16 @@ int main(int argc,char **argv) {
 	glfwSwapInterval(1);
 
 	glfwSetWindowSizeCallback(window, window_size_callback);
+	glfwSetKeyCallback(window, key_callback);
 
 	init(window);
 
 	while (!glfwWindowShouldClose(window)) {
+		
 		display(window, glfwGetTime());
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		//cameraMove();
 	}
 
 	glfwDestroyWindow(window);
