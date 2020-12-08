@@ -21,7 +21,7 @@ struct Material
 	vec4 specular;  
 	float shininess;
 };
-
+uniform float judgeSun;
 uniform vec4 globalAmbient;
 uniform PositionalLight light;
 uniform Material material;
@@ -33,6 +33,10 @@ layout (binding=0) uniform sampler2D s;
 
 void main(void)
 {	
+	if(judgeSun==1.0){
+		color=texture(s,tc);
+	}
+	else{
 	// normalize the light, normal, and view vectors:
 	vec3 L = normalize(varyingLightDir);
 	vec3 N = normalize(varyingNormal);
@@ -53,7 +57,9 @@ void main(void)
 	vec3 ambient = ((globalAmbient * material.ambient) + (light.ambient * material.ambient)).xyz;
 	vec3 diffuse = light.diffuse.xyz * material.diffuse.xyz * max(cosTheta,0.0);
 	vec3 specular = light.specular.xyz * material.specular.xyz * pow(max(cosPhi,0.0), material.shininess*3.0);
-
-	color = vec4((ambient + diffuse + specular), 1.0);
-	color = texture(s,tc);
+	
+	vec4 textureColor = texture(s,tc);
+	color = textureColor*vec4(ambient + diffuse + specular, 1.0);
+	}
+	
 }
