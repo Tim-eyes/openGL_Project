@@ -25,14 +25,22 @@ GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
 float rotAmt = 0.0f;
 bool keys[100000];
-
+bool mouses[100000];
+double xpos, ypos;
 
 //variable of camera
 GLfloat lastFrameTime = 0.0f;
 GLfloat deltaTime = 0.0f;
+// horizontal angle : toward -Z
+GLfloat horizontalAngle = 3.14f;
+// vertical angle : 0, look at the horizon
+GLfloat verticalAngle = 0.0f;
+// Initial Field of View
+GLfloat initialFoV = 45.0f;
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-glm::vec3 cameraPos = glm::vec3(cameraX, 0, cameraZ);
+glm::vec3 cameraTrans = glm::vec3(1.0f, 0.0f, 0.0f);
+glm::vec3 cameraPos = glm::vec3(cameraX, cameraY, cameraZ);
 
 // variable allocation for display
 GLuint vLoc, mvLoc, projLoc, nLoc,judgeSun;
@@ -200,8 +208,9 @@ void setupVertices(void) {
 void init(GLFWwindow* window) {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
 	renderingProgramCubeMap = Utils::createShaderProgram("vertCubeShader.glsl", "fragCubeShader.glsl");
-	cameraX = 0.0f; cameraY = 100.0f; cameraZ = 20.0f;
+	cameraX = 0.0f; cameraY = 0.0f; cameraZ = 0.0f;
 	sphLocX = 0.0f; sphLocY = 0.0f; sphLocZ = -1.0f;
+	xpos =0; ypos = 0;
 	//torLocX = 0.0f; torLocY = 0.0f; torLocZ = -0.5f;
 	glfwGetFramebufferSize(window, &width, &height);
 	aspect = (float)width / (float)height;
@@ -228,11 +237,36 @@ void init(GLFWwindow* window) {
 
 }
 
-void cameraMove(double currentTime) {
+void cameraMove(GLFWwindow* window, double currentTime) {
 	//GLfloat curFrameTime = glfwGetTime();
 	deltaTime = currentTime - lastFrameTime;
 	lastFrameTime = currentTime;
 	GLfloat cameraSpeed = 5.0f * deltaTime;
+	GLfloat mouseSpeed = 0.05f * deltaTime;
+	glfwGetCursorPos(window,&xpos,&ypos);
+	/*horizontalAngle += mouseSpeed  * float(width / 2 - xpos);
+	verticalAngle += mouseSpeed  * float(height / 2 - ypos);*/
+	//cameraFront=glm::vec3 (
+	//	cos(verticalAngle) * sin(horizontalAngle),
+	//	sin(verticalAngle),
+	//	cos(verticalAngle) * cos(horizontalAngle)
+	//);
+	//glm::vec3 right = glm::vec3(
+	//	sin(horizontalAngle - 3.14f / 2.0f),
+	//	0,
+	//	cos(horizontalAngle - 3.14f / 2.0f)
+	//);
+	//glm::vec3 cameraUp = glm::cross(right, cameraFront);
+	//
+	////WASD
+	//if (keys[GLFW_KEY_W])
+	//	cameraPos += cameraSpeed * cameraFront;
+	//if (keys[GLFW_KEY_S])
+	//	cameraPos -= cameraSpeed * cameraFront;
+	//if (keys[GLFW_KEY_A])
+	//	cameraPos += cameraSpeed * right;
+	//if (keys[GLFW_KEY_D])
+	//	cameraPos -= cameraSpeed * right;
 	//WASD
 	if (keys[GLFW_KEY_W])
 		cameraPos += cameraSpeed * cameraFront;
@@ -242,6 +276,7 @@ void cameraMove(double currentTime) {
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 	if (keys[GLFW_KEY_D])
 		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	
 }
 
 void display(GLFWwindow* window, double currentTime) {
@@ -250,7 +285,9 @@ void display(GLFWwindow* window, double currentTime) {
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
-	cameraMove(currentTime);
+	
+	
+	cameraMove(window,currentTime);
 
 	vMat = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
@@ -608,7 +645,24 @@ void display(GLFWwindow* window, double currentTime) {
 	mvStack.pop();
 }
 
-
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (action == GLFW_PRESS) switch (button)
+	{
+	case GLFW_MOUSE_BUTTON_LEFT:
+		cout<< "Mosue left button clicked!";
+		break;
+	case GLFW_MOUSE_BUTTON_MIDDLE:
+		cout<<"Mosue middle button clicked!";
+		break;
+	case GLFW_MOUSE_BUTTON_RIGHT:
+		cout<< "Mosue right button clicked!";
+		break;
+	default:
+		return;
+	}
+	return;
+}
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
@@ -643,6 +697,8 @@ int main(int argc, char** argv) {
 
 	glfwSetWindowSizeCallback(window, window_size_callback);
 	glfwSetKeyCallback(window, key_callback);
+	//SetCursorPosCallback(window,)
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	init(window);
 
