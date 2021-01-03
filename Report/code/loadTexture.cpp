@@ -1,0 +1,1 @@
+GLuint myTexture = Utils::loadTexture("image.jpg")
