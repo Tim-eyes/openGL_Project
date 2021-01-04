@@ -47,6 +47,8 @@ The main model objects to animate asters are sphere and torus respectively. And 
 The output in window can be seen in figure below:
 ![Sample of Output](/Report/image/Sample-of-output.gif)
 
+You can download the files *openGL_Project.exe* and *glew32.dll* to realize output.
+
 ## Final Report
 
 More specific information can be seen in our submission of final report [Project in CS104 – Animation of the Solar](/openGL_Project/Project%20in%20CS104%20–%20Animation%20of%20the%20Solar.pdf).
