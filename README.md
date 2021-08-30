@@ -5,7 +5,7 @@ Author: HE PEILIN 10078,
 
 ## Introduction
 
-The core of project is to be familiar with transformations, texture mapping, lighting and window event handling, so that general animation of solar system which consists of the **Sun**, eight planets (**Venus**, **Earth**, **Mars**, **Jupiter**,**Saturn**, **Uranus**, and **Neptune**) and the **Moon** can be realized.
+The core of project is to be familiar with transformations, texture mapping, lighting and window event handling, so that general animation of solar system which consists of the **Sun**, eight planets (**Mercury**, **Venus**, **Earth**, **Mars**, **Jupiter**, **Saturn**, **Uranus**, and **Neptune**) and the **Moon** can be realized.
 
 ## Core and supporting libraries
 
